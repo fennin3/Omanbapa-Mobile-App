@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:http/http.dart' as http;
+import 'package:omanbapa/screens/auth/signup_const.dart';
+import 'package:omanbapa/screens/auth/verify_account.dart';
 import 'package:omanbapa/screens/general/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +18,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
 
@@ -37,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
           "Login Successful",
           textAlign: TextAlign.center,
         ),
-        duration: Duration(seconds: 2),
+        duration: Duration(seconds: 1),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       final _data = json.decode(response.body);
@@ -46,19 +49,101 @@ class _LoginScreenState extends State<LoginScreen> {
 
       sharedPreferences.setBool('loggedIn', true);
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (BuildContext context) => HomePage(),
-        ),
-        (Route<dynamic> route) => false,
-      );
+      Future.delayed(Duration(seconds: 1))
+          .then((value) => Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => HomePage(),
+                ),
+                (Route<dynamic> route) => false,
+              ));
     } else {
-      print(response.body);
+      if (json.decode(response.body)['email_verified'] != null &&
+          json.decode(response.body)['email_verified'] == false) {
+        final snackBar = SnackBar(
+          content: Text(
+            "${json.decode(response.body)['message']}",
+            textAlign: TextAlign.center,
+          ),
+          duration: const Duration(seconds: 2),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+        Future.delayed(const Duration(milliseconds: 2100)).then(
+          (value) => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VerifyAccount(
+                email: _email.text,
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     setState(() {
       _loading = false;
     });
+  }
+
+  void accoutTypeModal() {
+    showModalBottomSheet(
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+        context: context,
+        builder: (context) {
+          return Container(
+            decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20))),
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                          style: ButtonStyle(
+                              backgroundColor:
+                                  MaterialStateProperty.all(appColor)),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SignupConstPage()));
+                          },
+                          child: const Text(
+                            "Constituent Account",
+                            style: TextStyle(color: Colors.white),
+                          )),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      TextButton(
+                          style: ButtonStyle(
+                              backgroundColor:
+                                  MaterialStateProperty.all(appColor)),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => SignupConstPage()));
+                          },
+                          child: const Text(
+                            "MP Account",
+                            style: TextStyle(color: Colors.white),
+                          )),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
+        });
   }
 
   @override
@@ -99,11 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(fontSize: 14),
                       controller: _email,
                       validator: (e) {
-                        if (!_email.text.contains('@')) {
-                          return "Enter a valid email or phone";
-                        } else if (!_email.text.contains('.com')) {
-                          return "Enter a valid email or phone";
-                        } else if (_email.text.isEmpty) {
+                        if (_email.text.isEmpty) {
                           return "Enter an email address or phone";
                         } else {
                           return null;
@@ -119,6 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     width: size.width * 0.8,
                     child: TextFormField(
+                      obscureText: true,
                       style: TextStyle(fontSize: 14),
                       controller: _password,
                       validator: (e) {
@@ -191,20 +273,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: size.width * 0.8,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Text(
+                      children: [
+                        const Text(
                           "Need an account?",
                           style: TextStyle(fontSize: 13),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 10,
                         ),
-                        Text(
-                          "Sign Up",
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: appColor),
+                        InkWell(
+                          onTap: () => accoutTypeModal(),
+                          child: const Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: appColor),
+                          ),
                         ),
                       ],
                     ),

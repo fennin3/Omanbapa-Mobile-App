@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:omanbapa/screens/auth/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:omanbapa/screens/auth/verify_account.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-      home: const LoginScreen(),
+      home: LoginScreen(),
     );
   }
 }
