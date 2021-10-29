@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:http/http.dart' as http;
+import 'package:omanbapa/provider/get_functions.dart';
 import 'package:omanbapa/screens/auth/signup_const.dart';
+import 'package:omanbapa/screens/auth/signup_mp.dart';
 import 'package:omanbapa/screens/auth/verify_account.dart';
 import 'package:omanbapa/screens/general/home.dart';
+import 'package:omanbapa/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,59 +35,80 @@ class _LoginScreenState extends State<LoginScreen> {
       "email_or_contact": _email.text,
       "password": _password.text
     };
-    http.Response response =
-        await http.post(Uri.parse(base_url + "users/login/"), body: _data);
 
-    if (response.statusCode < 206) {
-      const snackBar = SnackBar(
-        content: Text(
-          "Login Successful",
-          textAlign: TextAlign.center,
-        ),
-        duration: Duration(seconds: 1),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      final _data = json.decode(response.body);
-      sharedPreferences.setStringList(
-          'userdata', [_data['token'], _data['id'].toString(), _data['email']]);
+    try{
+      http.Response response =
+      await http.post(Uri.parse(base_url + "users/login/"), body: _data);
 
-      sharedPreferences.setBool('loggedIn', true);
-
-      Future.delayed(Duration(seconds: 1))
-          .then((value) => Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => HomePage(),
-                ),
-                (Route<dynamic> route) => false,
-              ));
-    } else {
-      if (json.decode(response.body)['email_verified'] != null &&
-          json.decode(response.body)['email_verified'] == false) {
-        final snackBar = SnackBar(
+      if (response.statusCode < 206) {
+        setState(() {
+          _loading = false;
+        });
+        const snackBar = SnackBar(
           content: Text(
-            "${json.decode(response.body)['message']}",
+            "Login Successful",
             textAlign: TextAlign.center,
           ),
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 1),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        final _data = json.decode(response.body);
+        sharedPreferences.setStringList(
+            'userdata', [_data['token'], _data['id'].toString(), _data['email'], _data['system_id_for_user']]);
 
-        Future.delayed(const Duration(milliseconds: 2100)).then(
-          (value) => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VerifyAccount(
-                email: _email.text,
+        sharedPreferences.setBool('loggedIn', true);
+
+        Future.delayed(const Duration(seconds: 1))
+            .then((value) => Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (BuildContext context) => HomePage(),
+          ),
+              (Route<dynamic> route) => false,
+        ));
+      } else {
+        setState(() {
+          _loading = false;
+        });
+        if (json.decode(response.body)['email_verified'] != null &&
+            json.decode(response.body)['email_verified'] == false) {
+          final snackBar = SnackBar(
+            content: Text(
+              "${json.decode(response.body)['message']}",
+              textAlign: TextAlign.center,
+            ),
+            duration: const Duration(seconds: 2),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+          Future.delayed(const Duration(milliseconds: 2100)).then(
+                (value) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => VerifyAccount(
+                  email: _email.text,
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
+        else{
+          print(response.body);
+          setState(() {
+            _loading = false;
+          });
+          try{
+            MyUtils.snack(context, "${json.decode(response.body)['non_field_errors'][0]}", 2);
+          }
+          catch(e){}
+        }
       }
     }
-
-    setState(() {
-      _loading = false;
-    });
+    on SocketException{
+      setState(() {
+        _loading = false;
+      });
+      MyUtils.snack(context, "No Internet", 2);
+    }
   }
 
   void accoutTypeModal() {
@@ -131,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => SignupConstPage()));
+                                    builder: (context) => SignupMP()));
                           },
                           child: const Text(
                             "MP Account",
@@ -190,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         }
                       },
-                      decoration: inputFormDeco,
+                      decoration: inputFormDeco.copyWith(labelText: "Email or Phone"),
                       keyboardType: TextInputType.text,
                     ),
                   ),

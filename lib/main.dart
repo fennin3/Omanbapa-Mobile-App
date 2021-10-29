@@ -1,15 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:omanbapa/provider/provider_class.dart';
 import 'package:omanbapa/screens/auth/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:omanbapa/screens/auth/verify_account.dart';
+import 'package:omanbapa/screens/general/home.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
 
-void main() {
+
+const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+Random _rnd = Random();
+
+String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
+    length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
+
+void main() async{
+  String state = "";
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  final _loggedId = sharedPreferences.getBool('loggedIn');
+
+  if (sharedPreferences.getString("state") != null) {
+    state = sharedPreferences.getString("state")!;
+  } else {
+    state = getRandomString(10);
+
+    sharedPreferences.setString("state", state);
+  }
+  runApp(MultiProvider(
+    key: ObjectKey(state),
+    providers: [
+      ChangeNotifierProvider<GeneralData>(
+        create: (_) => GeneralData(),
+      ),
+    ],
+    child: MyApp(loggedid: _loggedId,),
+  ),);
 }
 
+
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final loggedid;
+
+  MyApp({this.loggedid});
 
   // This widget is the root of your application.
   @override
@@ -23,7 +56,7 @@ class MyApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-      home: LoginScreen(),
+      home: loggedid == true? const HomePage(): const LoginScreen(),
     );
   }
 }

@@ -128,8 +128,6 @@ class _SignupConstPageState extends State<SignupConstPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    print(_region.text);
-    _loading = false;
     return Scaffold(
       backgroundColor: Colors.white,
       body: allCountries != null
