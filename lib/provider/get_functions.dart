@@ -64,4 +64,19 @@ class MyFunc{
   }
 
 
+  static requestNotification()async{
+    Map? _data={};
+    final userId = await UserLocalData.userID();
+    http.Response response = await http.get(Uri.parse(base_url + "mp-operations/mp-request-notifications/$userId/"));
+
+    if(response.statusCode < 206){
+      _data = json.decode(response.body);
+    }
+    else{
+    }
+
+    return _data;
+  }
+
+
 }

@@ -6,7 +6,7 @@ import 'package:omanbapa/screens/general/home.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
-
+import 'package:flutter_downloader/flutter_downloader.dart';
 
 const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
 Random _rnd = Random();
@@ -17,6 +17,9 @@ String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
 void main() async{
   String state = "";
   WidgetsFlutterBinding.ensureInitialized();
+  await FlutterDownloader.initialize(
+      debug: true // optional: set false to disable printing logs to console
+  );
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
   final _loggedId = sharedPreferences.getBool('loggedIn');
 

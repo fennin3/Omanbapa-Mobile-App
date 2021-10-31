@@ -14,6 +14,7 @@ import 'dart:convert';
 
 
 
+
 class IncidentReportCon extends StatefulWidget {
   const IncidentReportCon({Key? key}) : super(key: key);
 
@@ -212,10 +213,6 @@ class _IncidentReportConState extends State<IncidentReportCon> {
           } else {
 
             sendIncidentRequest(filepath,_subject.text,txt,context);
-
-
-
-
           }
         },
       ),

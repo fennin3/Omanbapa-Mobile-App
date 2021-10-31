@@ -98,21 +98,22 @@ class _PostWidgetState extends State<PostWidget> {
                 const SizedBox(
                   width: 15,
                 ),
-                // Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     Text(
-                //       "${widget.project['name']}",
-                //       style: const TextStyle(
-                //           fontSize: 11, fontWeight: FontWeight.w700),
-                //     ),
-                //     Text(
-                //       "${widget.project['place']}",
-                //       style: const TextStyle(fontSize: 11),
-                //     ),
-                //   ],
-                // ),
+                if(widget.project['name'] != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "${widget.project['name']}",
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      "${widget.project['place']}",
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ],
+                ),
                 const Expanded(child: SizedBox()),
                 Text(
                   timeago.format(DateTime.parse(widget.project['date_posted']),

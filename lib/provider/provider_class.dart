@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:omanbapa/provider/get_functions.dart';
 
+
 class GeneralData with ChangeNotifier{
   Map? userData;
   List? projects;
   List? allConstituents=[];
+  Map? requestnotifications;
 
 
 
@@ -22,6 +24,12 @@ class GeneralData with ChangeNotifier{
 
   void getAllConstituents()async{
     allConstituents = await MyFunc.allConsttuents();
+
+    notifyListeners();
+  }
+
+  void getrequestNotification()async{
+    requestnotifications = await MyFunc.requestNotification();
 
     notifyListeners();
   }
