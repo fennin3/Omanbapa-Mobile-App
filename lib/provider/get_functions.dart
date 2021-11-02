@@ -63,6 +63,21 @@ class MyFunc{
     return _data;
   }
 
+  static AllUsers()async{
+    List? _data=[];
+    final userId = await UserLocalData.userID();
+    http.Response response = await http.get(Uri.parse(base_url + "mp-operations/get-users-in-country/Ghana/"));
+
+    if(response.statusCode < 206){
+      _data = json.decode(response.body)['data'];
+    }
+    else{
+      print(response.body);
+    }
+
+    return _data;
+  }
+
 
   static requestNotification()async{
     Map? _data={};

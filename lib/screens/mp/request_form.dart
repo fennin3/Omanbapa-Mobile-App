@@ -80,7 +80,7 @@ class _RequestFormMpState extends State<RequestFormMp> {
                             const VisualDensity(horizontal: 0, vertical: -2),
                         title: Text(
                           "${_pro.requestnotifications!['request_form'][index]['sender']['full_name']}",
-                          style: const TextStyle(fontSize: 13),
+                          style: bigFont,
                         ),
                         subtitle: Text(
                           timeago.format(
@@ -96,23 +96,23 @@ class _RequestFormMpState extends State<RequestFormMp> {
                                       'now'
                                   ? ""
                                   : " ago"),
-                          style: const TextStyle(fontSize: 10),
+                          style: smallFont,
                         ),
                         trailing: _pro.requestnotifications!['request_form']
                                 [index]['read']
                             ? const Icon(
                                 Icons.done_all,
                                 color: Colors.green,
+                          size: 14,
                               )
-                            : const Card(
+                            :  Card(
                                 elevation: 5,
                                 color: Colors.grey,
                                 child: Padding(
-                                  padding: EdgeInsets.all(5.0),
+                                  padding: const EdgeInsets.all(5.0),
                                   child: Text(
                                     "unread",
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.white),
+                                    style: smallFont.copyWith(color: Colors.white)
                                   ),
                                 ),
                               ),

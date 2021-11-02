@@ -1,4 +1,4 @@
-package com.example.omanbapa
+package com.ink.omanbapa
 
 import io.flutter.embedding.android.FlutterActivity
 

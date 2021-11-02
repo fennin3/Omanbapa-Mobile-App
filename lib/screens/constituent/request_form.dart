@@ -117,7 +117,7 @@ class _RequestFormConState extends State<RequestFormCon> {
                 children: [
                   const SizedBox(height: 10),
                   TextFormField(
-                    style: const TextStyle(fontSize: 14),
+                    style: bigFont,
                     controller: _subject,
                     validator: (e) {
                       if (_subject.text.isEmpty) {
@@ -128,7 +128,7 @@ class _RequestFormConState extends State<RequestFormCon> {
                     },
                     decoration: inputFormDeco.copyWith(
                         labelText: "Subject",
-                        labelStyle: TextStyle(fontSize: 11)),
+                        labelStyle:smallFont),
                     keyboardType: TextInputType.text,
                   ),
                   const SizedBox(
@@ -148,7 +148,7 @@ class _RequestFormConState extends State<RequestFormCon> {
                       const Text(
                         "Attach File",
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w500),
+                            fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(
                         height: 8,

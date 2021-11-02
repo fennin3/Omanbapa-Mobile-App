@@ -102,12 +102,11 @@ class _ProjectWidgetState extends State<ProjectWidget> {
                   children: [
                     Text(
                       "${widget.project['name']}",
-                      style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w700),
+                      style:  mediumFont.copyWith(fontWeight: FontWeight.w700)
                     ),
                     Text(
                       "${widget.project['place']}",
-                      style: const TextStyle(fontSize: 11),
+                      style: mediumFont
                     ),
                   ],
                 ),
@@ -115,8 +114,7 @@ class _ProjectWidgetState extends State<ProjectWidget> {
                 Text(
                   timeago.format(DateTime.parse(widget.project['date_posted']),
                       locale: 'en_short') + " ago",
-                  style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600),
+                  style: mediumFont.copyWith(fontWeight: FontWeight.w600)
                 )
               ],
             ),
@@ -129,7 +127,7 @@ class _ProjectWidgetState extends State<ProjectWidget> {
             child: Text(
               "${widget.project['description']}",
               textAlign: TextAlign.start,
-              style: TextStyle(fontSize: 12),
+              style: mediumFont
             ),
           ),
           if (widget.project['media'] != null)
@@ -157,7 +155,7 @@ class _ProjectWidgetState extends State<ProjectWidget> {
               children: [
                 Text(
                   "$likes \tLikes \t\t $comments \tComments",
-                  style: TextStyle(fontSize: 11),
+                  style: smallFont
                 )
               ],
             ),
@@ -189,7 +187,7 @@ class _ProjectWidgetState extends State<ProjectWidget> {
                         "Like",
                         style: TextStyle(
                             color: !liked ? Colors.black54 : appColor,
-                            fontSize: liked ? 13 : 12),
+                            fontSize: liked ? 16 : 15),
                       )
                     ],
                   ),
@@ -214,7 +212,7 @@ class _ProjectWidgetState extends State<ProjectWidget> {
                       ),
                       Text(
                         "Comment",
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                        style: TextStyle(color: Colors.black54, fontSize: 15),
                       )
                     ],
                   ),

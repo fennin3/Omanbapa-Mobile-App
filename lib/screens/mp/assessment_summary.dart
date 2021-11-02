@@ -167,10 +167,10 @@ class _AssessmentSummaryState extends State<AssessmentSummary> {
                     const SizedBox(height: 10,),
                     const Padding(
                       padding:  EdgeInsets.only(bottom: 8.0),
-                      child:  Text("Conduct Assessment", style: TextStyle(fontWeight: FontWeight.w600),),
+                      child:  Text("Conduct Assessment", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
                     ),
                     if(_condData.isEmpty)
-                      const Center(child:  Text("No Data"),)
+                      const Center(child:  Text("No Data",  style: smallFont),)
                     else
                       for(var con in _condData)
                         Padding(
@@ -200,10 +200,10 @@ class _AssessmentSummaryState extends State<AssessmentSummary> {
                     const SizedBox(height: 20,),
                     const Padding(
                       padding:  EdgeInsets.only(bottom: 8.0),
-                      child:  Text("Project Assessment", style: TextStyle(fontWeight: FontWeight.w600),),
+                      child:  Text("Project Assessment", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
                     ),
                     if(_projectData.isEmpty)
-                      const Center(child:  Text("No Data"),)
+                      const Center(child:  Text("No Data", style: smallFont,),)
                     else
                       for(var con in _projectData)
                         Padding(

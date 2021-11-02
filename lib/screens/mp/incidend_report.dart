@@ -82,7 +82,7 @@ class _IncidenReportMPState extends State<IncidenReportMP> {
                                 horizontal: 0, vertical: -2),
                             title: Text(
                               "${_pro.requestnotifications!['incident_reports'][index]['sender']['full_name']}",
-                              style: const TextStyle(fontSize: 13),
+                              style: bigFont,
                             ),
                             subtitle: Text(
                               timeago.format(
@@ -98,7 +98,7 @@ class _IncidenReportMPState extends State<IncidenReportMP> {
                                           'now'
                                       ? ""
                                       : " ago"),
-                              style: TextStyle(fontSize: 10),
+                              style: smallFont,
                             ),
                             trailing:
                                 _pro.requestnotifications!['incident_reports']
@@ -106,6 +106,7 @@ class _IncidenReportMPState extends State<IncidenReportMP> {
                                     ? const Icon(
                                         Icons.done_all,
                                         color: Colors.green,
+                                  size: 14,
                                       )
                                     : const Card(
                                         elevation: 5,
@@ -114,16 +115,14 @@ class _IncidenReportMPState extends State<IncidenReportMP> {
                                           padding: EdgeInsets.all(5.0),
                                           child: Text(
                                             "unread",
-                                            style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.white),
+                                            style: smallFont,
                                           ),
                                         ),
                                       ),
                           );
                         })
                     : const Center(
-                        child: Text("No request form"),
+                        child: Text("No incident requests"),
                       ),
               ));
   }

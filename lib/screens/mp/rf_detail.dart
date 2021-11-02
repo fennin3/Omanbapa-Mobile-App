@@ -111,15 +111,15 @@ class _RFDetailState extends State<RFDetail>
             ),
             Text(
               "${widget.data['sender']['full_name']}",
-              style: const TextStyle(fontSize: 14),
+              style: bigFont,
             ),
             Text(
               "${widget.data['sender']['email']}",
-              style: const TextStyle(fontSize: 14),
+              style: bigFont,
             ),
             Text(
               "${widget.data['sender']['contact']}",
-              style: const TextStyle(fontSize: 14),
+              style: bigFont,
             ),
             const SizedBox(
               height: 20,
@@ -133,7 +133,7 @@ class _RFDetailState extends State<RFDetail>
             ),
             HtmlWidget(
               "${widget.data['message']}",
-              textStyle: const TextStyle(fontSize: 14),
+              textStyle: mediumFont,
             ),
             const SizedBox(
               height: 20,

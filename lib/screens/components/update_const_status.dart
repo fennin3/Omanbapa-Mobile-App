@@ -85,7 +85,7 @@ class _UpdateConstituentState extends State<UpdateConstituent> {
                 children: [
                   const Text(
                     "Update Constituent Status",
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   ),
 
                   const SizedBox(

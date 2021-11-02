@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     width: size.width * 0.8,
                     child: TextFormField(
-                      style: TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 15),
                       controller: _email,
                       validator: (e) {
                         if (_email.text.isEmpty) {
@@ -226,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: size.width * 0.8,
                     child: TextFormField(
                       obscureText: true,
-                      style: TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 15),
                       controller: _password,
                       validator: (e) {
                         if (_password.text.isEmpty) {
@@ -272,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(7)),
                       child: Center(
                           child: !_loading
-                              ? const Text("Login")
+                              ? const Text("Login", style: mediumFont,)
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -301,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const Text(
                           "Need an account?",
-                          style: TextStyle(fontSize: 13),
+                          style: mediumFont,
                         ),
                         const SizedBox(
                           width: 10,

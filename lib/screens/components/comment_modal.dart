@@ -148,12 +148,12 @@ class _CommentmodalState extends State<Commentmodal> {
                                       Text(
                                         "${comment['comment_from']['full_name']}",
                                         style: const TextStyle(
-                                            fontSize: 11,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w700),
                                       ),
                                       Text(
                                         "${comment['text']}",
-                                        style: const TextStyle(fontSize: 11),
+                                        style: const TextStyle(fontSize: 14),
                                       ),
                                     ],
                                   ),
@@ -166,7 +166,7 @@ class _CommentmodalState extends State<Commentmodal> {
                                       DateTime.parse(comment['date_posted']),
                                       locale: 'en_short'),
                                   style: const TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w600),
                                 )
                               ],
@@ -187,7 +187,7 @@ class _CommentmodalState extends State<Commentmodal> {
                         minLines: 1,
                         //Normal textInputField will be displayed
                         maxLines: 5,
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 15),
                         cursorColor: Colors.black38,
                         decoration: const InputDecoration(
                           labelText: "Type your comment here...",

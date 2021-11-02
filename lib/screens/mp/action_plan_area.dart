@@ -196,7 +196,7 @@ class _ActionPlanAreaState extends State<ActionPlanArea> {
 
                     ],
                   ),
-                  const SizedBox(height: 5,),
+                  const SizedBox(height: 15,),
                   if(_actionPlans.isEmpty)
                     const Padding(
                       padding:  EdgeInsets.only(top: 100.0),
@@ -247,7 +247,13 @@ class _ActionPlanAreaState extends State<ActionPlanArea> {
                             ),
                              Padding(
                               padding:  const EdgeInsets.all(5.0),
-                              child: Text("${ac['comment']}"),
+                              child:Column(
+
+                                children: [
+                                   Text("Comment From Assemblyman", style: smallFont.copyWith(fontWeight: FontWeight.w600),),
+                                  Text("${ac['comment']}", style: bigFont,),
+                                ],
+                              )
                             )
                           ],
                         ),

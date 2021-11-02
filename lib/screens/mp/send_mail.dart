@@ -243,7 +243,7 @@ class _SendMailState extends State<SendMail> {
                     Container(
                       width: size.width * 0.9,
                       child: TextFormField(
-                        style: TextStyle(fontSize: 14),
+                        style: bigFont,
                         controller: _subject,
                         validator: (e) {
                           if (_subject.text.isEmpty) {
@@ -270,7 +270,7 @@ class _SendMailState extends State<SendMail> {
                         const Text(
                           "Attach File",
                           style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w500),
+                              fontSize: 14, fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(
                           height: 8,

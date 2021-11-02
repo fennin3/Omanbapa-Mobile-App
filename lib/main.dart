@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:flutter/services.dart';
 
 const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
 Random _rnd = Random();
@@ -17,7 +18,7 @@ String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
 void main() async{
   String state = "";
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterDownloader.initialize(
+    await FlutterDownloader.initialize(
       debug: true // optional: set false to disable printing logs to console
   );
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
@@ -50,6 +51,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Omanbapa',

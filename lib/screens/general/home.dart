@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:omanbapa/local_data/user_info.dart';
@@ -30,7 +32,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin{
   int _selectedIndex = 0;
   bool ac_on = false;
   bool ass_on = false;
@@ -38,18 +40,25 @@ class _HomePageState extends State<HomePage> {
   List availableConts = [];
   List<Map> _indieMessages = [];
   List<Map> _forumMessages = [];
+  List _mpMessages=[];
   List _chatMessages = [];
+  int unreadMessages = 0;
+  int unreadIncident = 0;
+  int unreadRequest = 0;
   String? mpId;
   bool messageConnected = false;
   final GlobalKey<ScaffoldState> _key = GlobalKey();
   final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController(initialRefresh: false);
   final TextEditingController _messageText = TextEditingController();
   final TextEditingController _forumText = TextEditingController();
-  final _controller = ScrollController();
+  ScrollController _indiecontroller = ScrollController();
+  ScrollController _forumcontroller = ScrollController();
+  TabController? _tabController;
+
 
   IO.Socket socket =
-      IO.io('https://sapa-chatsystem.herokuapp.com/chat', <String, dynamic>{
+  IO.io('https://sapa-chatsystem.herokuapp.com/chat', <String, dynamic>{
     'transports': ['websocket'],
     'extraHeaders': {'foo': 'bar'} // optional
   });
@@ -96,7 +105,6 @@ class _HomePageState extends State<HomePage> {
   void _onRefresh() async {
     setState(() {
       setInitData();
-
     });
     _refreshController.refreshCompleted();
   }
@@ -105,10 +113,11 @@ class _HomePageState extends State<HomePage> {
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => Dialog(
+        builder: (_) =>
+            Dialog(
                 child: SecRegistration(
-              data: availableConts,
-            )));
+                  data: availableConts,
+                )));
   }
 
   void switchConst() {
@@ -137,21 +146,51 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void setUnreadIndieMessages() async {
+    final userId = await UserLocalData.userID();
+    try {
+      http.Response response = await http.post(Uri.parse(
+          base_url + "general/set-unread-messages-to-read/$userId/$mpId/"));
+      if (response.statusCode < 206) {}
+      else {
+        print(response.body);
+      }
+    } catch (e) {}
+  }
+
+  void getUnreads() async {
+    final userId = await UserLocalData.userID();
+
+    http.Response response = await http.get(
+        Uri.parse(base_url + "general/unread-info/$userId/"));
+    if (response.statusCode < 206) {
+      Map _data = json.decode(response.body);
+      setState(() {
+        unreadMessages = _data['messages'];
+        unreadIncident = _data['incident_reports'];
+        unreadRequest = _data['request_forms'];
+      });
+    }
+    else {}
+  }
+
   void setInitData() {
     final _pro = Provider.of<GeneralData>(context, listen: false);
     _pro.getUserData();
     _pro.getProjects();
     _pro.getAllConstituents();
     _pro.getrequestNotification();
+    _pro.getAllUsers();
     getAvailableConst();
     getACStatus();
     getASStatus();
     getForumtatus();
+    getUnreads();
   }
 
   void getACStatus() async {
     http.Response response =
-        await http.get(Uri.parse(base_url + "general/get-actionplan-status/"));
+    await http.get(Uri.parse(base_url + "general/get-actionplan-status/"));
     if (response.statusCode < 206) {
       setState(() {
         ac_on = json.decode(response.body)['action_plan_status'];
@@ -161,7 +200,7 @@ class _HomePageState extends State<HomePage> {
 
   void getASStatus() async {
     http.Response response =
-        await http.get(Uri.parse(base_url + "general/get-assessment-status/"));
+    await http.get(Uri.parse(base_url + "general/get-assessment-status/"));
     if (response.statusCode < 206) {
       setState(() {
         ass_on = json.decode(response.body)['assessment_status'];
@@ -171,7 +210,7 @@ class _HomePageState extends State<HomePage> {
 
   void getForumtatus() async {
     http.Response response =
-        await http.get(Uri.parse(base_url + "general/get-forum-status/"));
+    await http.get(Uri.parse(base_url + "general/get-forum-status/"));
     if (response.statusCode < 206) {
       setState(() {
         forum_on = json.decode(response.body)['forum_status'];
@@ -192,15 +231,12 @@ class _HomePageState extends State<HomePage> {
     }
     http.Response response = await http
         .post(Uri.parse(base_url + "chatsystem/send-message/"), body: _data);
-    if (response.statusCode < 206) {
-    } else {
+    if (response.statusCode < 206) {} else {
       MyUtils.snack(context, "message sending failed", 2);
     }
   }
 
   void SendForumMessage(Map user, message) async {
-    _controller.animateTo(_controller.position.maxScrollExtent + 100,
-        duration: Duration(milliseconds: 500), curve: Curves.ease);
     socket.emit('msg_form', {"sender": user, "message": message});
     Map _data = {};
 
@@ -210,8 +246,7 @@ class _HomePageState extends State<HomePage> {
     http.Response response = await http.post(
         Uri.parse(base_url + "general/send-message-to-forum/"),
         body: _data);
-    if (response.statusCode < 206) {
-    } else {
+    if (response.statusCode < 206) {} else {
       MyUtils.snack(context, "message sending failed", 2);
     }
   }
@@ -235,6 +270,23 @@ class _HomePageState extends State<HomePage> {
     } else {}
   }
 
+
+  void getMpMessages() async {
+    List? _data;
+    final userId = await UserLocalData.userID();
+    http.Response response = await http
+        .get(Uri.parse(base_url + "mp-operations/mp-request-notifications/$userId/"));
+
+    if (response.statusCode < 206) {
+      final List _data = json.decode(response.body)['messages'];
+      setState(() {
+        _mpMessages=_data;
+      });
+    } else {
+      print(response.body);
+    }
+  }
+
   void getIndieMessageds() async {
     List? _data;
     final userId = await UserLocalData.userID();
@@ -254,17 +306,7 @@ class _HomePageState extends State<HomePage> {
     } else {}
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setInitData();
-    socketInit();
-    getForumMessageds();
-    getIndieMessageds();
-  }
-
-  void selectPostorProject() {
+  void selectPostOrProject() {
     showModalBottomSheet(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
@@ -286,18 +328,18 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                           style: ButtonStyle(
                               backgroundColor:
-                                  MaterialStateProperty.all(appColor)),
+                              MaterialStateProperty.all(appColor)),
                           onPressed: () {
                             Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const CreateProject()))
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                    const CreateProject()))
                                 .then((value) => _onRefresh());
                           },
-                          child: const Text(
+                          child:  Text(
                             "Create Project",
-                            style: TextStyle(color: Colors.white),
+                            style: bigFont.copyWith(color: Colors.white),
                           )),
                       const SizedBox(
                         width: 20,
@@ -305,17 +347,17 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                           style: ButtonStyle(
                               backgroundColor:
-                                  MaterialStateProperty.all(appColor)),
+                              MaterialStateProperty.all(appColor)),
                           onPressed: () {
                             Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => CreatePost()))
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => CreatePost()))
                                 .then((value) => _onRefresh());
                           },
-                          child: const Text(
+                          child:  Text(
                             "Create Post",
-                            style: TextStyle(color: Colors.white),
+                            style: bigFont.copyWith(color: Colors.white),
                           )),
                     ],
                   )
@@ -327,464 +369,608 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setInitData();
+    socketInit();
+    getForumMessageds();
+    getIndieMessageds();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+
+  @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
     _messageText.dispose();
     _forumText.dispose();
+    _tabController!.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    getMpMessages();
     final _pro = Provider.of<GeneralData>(context, listen: true);
+    if (_pro.userData != null && !_pro.userData!['is_mp']) {
+      if (_selectedIndex == 1) {
+        setUnreadIndieMessages();
+      }
+    }
+
+
+    if (_selectedIndex == 1 && !_pro.userData!['is_mp']) {
+      Future.delayed(const Duration(milliseconds: 50)).then((value) =>
+          _indiecontroller.jumpTo(_indiecontroller.position.maxScrollExtent));
+    }
+
+    if (_selectedIndex == 2) {
+      Future.delayed(const Duration(milliseconds: 50)).then((value) =>
+          _forumcontroller.jumpTo(_forumcontroller.position.maxScrollExtent));
+    }
+
     final _screen = [
       HomeScreen(pro: _pro),
       if (_pro.userData != null)
         _pro.userData!['is_constituent']
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Container(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Column(
-                            children: [
-                              const SizedBox(
-                                height: 15,
-                              ),
-                              if (_indieMessages.isNotEmpty)
-                                for (var data in _indieMessages)
-                                  Column(
-                                    crossAxisAlignment: data['userId'] !=
-                                            data['sender']['system_id_for_user']
-                                        ? CrossAxisAlignment.start
-                                        : CrossAxisAlignment.end,
-                                    children: [
-                                      Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 15),
-                                          child: Row(
-                                              mainAxisAlignment: data[
-                                                          'userId'] !=
-                                                      data['sender']
-                                                          ['system_id_for_user']
-                                                  ? MainAxisAlignment.start
-                                                  : MainAxisAlignment.end,
-                                              children: [
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                      color: data['userId'] ==
-                                                              data['sender'][
-                                                                  'system_id_for_user']
-                                                          ? Colors.grey
-                                                              .withOpacity(0.2)
-                                                          : Colors.blueGrey,
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                              topRight: Radius.circular(
-                                                                  data['userId'] ==
-                                                                          data['sender']
-                                                                              [
-                                                                              'system_id_for_user']
-                                                                      ? 0
-                                                                      : 6),
-                                                              topLeft: Radius
-                                                                  .circular(
-                                                                data['userId'] ==
-                                                                        data['sender']
-                                                                            [
-                                                                            'system_id_for_user']
-                                                                    ? 6
-                                                                    : 0,
-                                                              ),
-                                                              bottomLeft:
-                                                                  const Radius.circular(
-                                                                      6),
-                                                              bottomRight:
-                                                                  const Radius.circular(6))),
-                                                  child: Column(
-                                                      crossAxisAlignment: data[
-                                                                  'userId'] ==
-                                                              data['sender'][
-                                                                  'system_id_for_user']
-                                                          ? CrossAxisAlignment
-                                                              .end
-                                                          : CrossAxisAlignment
-                                                              .end,
-                                                      children: [
-                                                        Container(
-                                                          constraints: BoxConstraints(
-                                                              minWidth: 0.0,
-                                                              maxWidth: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width *
-                                                                  0.65),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .only(
-                                                                  left: 10,
-                                                                  right: 10,
-                                                                  top: 6,
-                                                                  bottom: 4),
-                                                          child: Text(
-                                                            "${data['msg'] ?? data['message']}",
-                                                            style: TextStyle(
-                                                                color: data['userId'] ==
-                                                                        data['sender']
-                                                                            [
-                                                                            'system_id_for_user']
-                                                                    ? Colors
-                                                                        .black
-                                                                    : Colors
-                                                                        .white,
-                                                                fontSize: 13),
-                                                            textAlign:
-                                                                TextAlign.start,
-                                                          ),
-                                                        ),
-                                                        Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .end,
-                                                          children: [
-                                                            Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                          .only(
-                                                                      right:
-                                                                          5.0,
-                                                                      bottom: 5,
-                                                                      left: 5),
-                                                              child: Text(
-                                                                timeago.format(
-                                                                        data[
-                                                                            'date'],
-                                                                        locale:
-                                                                            'en_short') +
-                                                                    (timeago.format(data['date'],
-                                                                                locale: 'en_short') ==
-                                                                            'now'
-                                                                        ? ""
-                                                                        : " ago"),
-                                                                style: TextStyle(
-                                                                    fontSize:
-                                                                        10,
-                                                                    color: data['userId'] ==
-                                                                            data['sender'][
-                                                                                'system_id_for_user']
-                                                                        ? Colors
-                                                                            .black
-                                                                        : Colors
-                                                                            .white,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w600),
-                                                              ),
-                                                            )
-                                                          ],
-                                                        )
-                                                      ]),
+            ? _indieMessages.isNotEmpty ? Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                  reverse: false,
+                  controller: _indiecontroller,
+                  itemCount: _indieMessages.length,
+                  padding: const EdgeInsets.only(
+                      top: 10, bottom: 10, right: 10, left: 10),
+                  itemBuilder: (context, index) {
+                    return Column(
+                      crossAxisAlignment: _indieMessages[index]['userId'] !=
+                          _indieMessages[index]['sender']['system_id_for_user']
+                          ? CrossAxisAlignment.start
+                          : CrossAxisAlignment.end,
+                      children: [
+                        Padding(
+                            padding:
+                            const EdgeInsets.only(bottom: 15),
+                            child: Row(
+                                mainAxisAlignment: _indieMessages[index][
+                                'userId'] !=
+                                    _indieMessages[index]['sender']
+                                    ['system_id_for_user']
+                                    ? MainAxisAlignment.start
+                                    : MainAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        color: _indieMessages[index]['userId'] ==
+                                            _indieMessages[index]['sender'][
+                                            'system_id_for_user']
+                                            ? Colors.grey
+                                            .withOpacity(0.2)
+                                            : Colors.blueGrey,
+                                        borderRadius:
+                                        BorderRadius.only(
+                                            topRight: Radius.circular(
+                                                _indieMessages[index]['userId'] ==
+                                                    _indieMessages[index]['sender']
+                                                    [
+                                                    'system_id_for_user']
+                                                    ? 0
+                                                    : 6),
+                                            topLeft: Radius
+                                                .circular(
+                                              _indieMessages[index]['userId'] ==
+                                                  _indieMessages[index]['sender']
+                                                  [
+                                                  'system_id_for_user']
+                                                  ? 6
+                                                  : 0,
+                                            ),
+                                            bottomLeft:
+                                            const Radius.circular(
+                                                6),
+                                            bottomRight:
+                                            const Radius.circular(6))),
+                                    child: Column(
+                                        crossAxisAlignment: _indieMessages[index][
+                                        'userId'] ==
+                                            _indieMessages[index]['sender'][
+                                            'system_id_for_user']
+                                            ? CrossAxisAlignment
+                                            .end
+                                            : CrossAxisAlignment
+                                            .end,
+                                        children: [
+                                          Container(
+                                            constraints: BoxConstraints(
+                                                minWidth: 0.0,
+                                                maxWidth: MediaQuery
+                                                    .of(
+                                                    context)
+                                                    .size
+                                                    .width *
+                                                    0.65),
+                                            padding:
+                                            const EdgeInsets
+                                                .only(
+                                                left: 10,
+                                                right: 10,
+                                                top: 6,
+                                                bottom: 4),
+                                            child: Text(
+                                              "${_indieMessages[index]['msg'] ??
+                                                  _indieMessages[index]['message']}",
+                                              style: TextStyle(
+                                                  color: _indieMessages[index]['userId'] ==
+                                                      _indieMessages[index]['sender']
+                                                      [
+                                                      'system_id_for_user']
+                                                      ? Colors
+                                                      .black
+                                                      : Colors
+                                                      .white,
+                                                  fontSize: 15),
+                                              textAlign:
+                                              TextAlign.start,
+                                            ),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .end,
+                                            children: [
+                                              Padding(
+                                                padding:
+                                                const EdgeInsets
+                                                    .only(
+                                                    right:
+                                                    5.0,
+                                                    bottom: 5,
+                                                    left: 5),
+                                                child: Text(
+                                                  timeago.format(
+                                                      _indieMessages[index][
+                                                      'date'],
+                                                      locale:
+                                                      'en_short') +
+                                                      (timeago.format(
+                                                          _indieMessages[index]['date'],
+                                                          locale: 'en_short') ==
+                                                          'now'
+                                                          ? ""
+                                                          : " ago"),
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                      12,
+                                                      color: _indieMessages[index]['userId'] ==
+                                                          _indieMessages[index]['sender'][
+                                                          'system_id_for_user']
+                                                          ? Colors
+                                                          .black
+                                                          : Colors
+                                                          .white,
+                                                      fontWeight:
+                                                      FontWeight
+                                                          .w600),
                                                 ),
-                                              ]))
-                                    ],
-                                  )
-                              else
-                                const Center(
-                                  child: Text(
-                                    "No Messages",
-                                    style: TextStyle(fontSize: 12),
+                                              )
+                                            ],
+                                          )
+                                        ]),
                                   ),
-                                )
-                            ],
+                                ]))
+                      ],
+                    );
+                  }),
+            ),
+            Align(
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 7,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery
+                              .of(context)
+                              .viewInsets
+                              .bottom *
+                              0.006),
+                      child: Container(
+                        constraints: BoxConstraints(
+                            minHeight: 0,
+                            maxHeight:
+                            MediaQuery
+                                .of(context)
+                                .size
+                                .height * 0.17),
+                        decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8)),
+                        child: Padding(
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: TextField(
+                            controller: _messageText,
+                            decoration: kTextFieldDecoration.copyWith(
+                                hintText: "Type message here...",
+                                hintStyle: const TextStyle(fontSize: 14)),
+                            keyboardType: TextInputType.multiline,
+                            maxLines: null,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      const SizedBox(
-                        width: 7,
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).viewInsets.bottom *
-                                  0.006),
-                          child: Container(
-                            constraints: BoxConstraints(
-                                minHeight: 0,
-                                maxHeight:
-                                    MediaQuery.of(context).size.height * 0.17),
-                            decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(8)),
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10.0),
-                              child: TextField(
-                                controller: _messageText,
-                                decoration: kTextFieldDecoration.copyWith(
-                                    hintText: "Type message here...",
-                                    hintStyle: const TextStyle(fontSize: 11)),
-                                keyboardType: TextInputType.multiline,
-                                maxLines: null,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding:
-                            EdgeInsets.only(right: 7.0, left: 7.0, bottom: 5.0),
-                        child: InkWell(
-                            onTap: () {
-                              SendIndividualMessage(
-                                  _pro.userData!, _messageText.text);
-                              _messageText.clear();
-                            },
-                            child: const Icon(
-                              Icons.send,
-                              size: 28,
-                            )),
-                      )
-                    ],
-                  ),
+                  Padding(
+                    padding:
+                    const EdgeInsets.only(right: 7.0, left: 7.0, bottom: 5.0),
+                    child: InkWell(
+                        onTap: () {
+                          Timer(
+                            const Duration(milliseconds: 300),
+                                () =>
+                                _indiecontroller.jumpTo(_indiecontroller
+                                    .position.maxScrollExtent),
+                          );
+                          // SendIndividualMessage(
+                          //     _pro.userData!, _messageText.text);
+                          _messageText.clear();
+                        },
+                        child: const Icon(
+                          Icons.send,
+                          size: 28,
+                        )),
+                  )
                 ],
-              )
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      if (_pro.allConstituents != null &&
-                          _pro.allConstituents!.isNotEmpty)
-                        for (var con in _pro.allConstituents!)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
-                            child: InkWell(
-                              onTap: () => Navigator.push(
+              ),
+              alignment: Alignment.bottomLeft,
+            )
+          ],
+        ) : const Center(
+          child: Text(
+            "No Messages",
+            style: bigFont,
+          ),
+        )
+            :
+        // MP chat starting
+
+        Column(
+          children: [
+            TabBar(
+              unselectedLabelColor: Colors.black,
+              labelColor: appColor,
+              labelStyle: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w600),
+              isScrollable: false,
+              tabs: const [
+
+                Tab(
+                  text: 'Messages',
+                ),
+                Tab(
+                  text: 'All Constituents',
+                ),
+              ],
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+            ),
+            Expanded(child: TabBarView(
+              controller: _tabController,
+              children: [
+                Container(
+                  child: _mpMessages.isEmpty? const Center(child:  Text("No Messages", style: bigFont,),):
+                  SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20,),
+                        for (var message in _mpMessages.reversed.toList())
+                          ListTile(
+                            onTap: (){
+                              Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => ChatMP(
-                                            conId: con['system_id_for_user'],
-                                            con: con,
-                                          ))),
-                              child: Row(
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 20,
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "${con['full_name']}",
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                      Text(
-                                        "${con['email']}",
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
+                                      builder: (context) =>
+                                          ChatMP(
+                                            conId: message['sender']['system_id_for_user'],
+                                            con: message['sender'],
+                                          )));
+                              },
+                            leading: CircleAvatar(
+                              radius: 25,
+                              backgroundImage: NetworkImage(base_url2 +
+                                  message['sender']['profile_picture']),
                             ),
+                            visualDensity:
+                            const VisualDensity(horizontal: 0, vertical: -4),
+                            title: Text(
+                              "${message['sender']['full_name']}",
+                              style: bigFont,
+                            ),
+                            subtitle: Text("${message['message']} yuyyuyvv   h h vb ghv hg gf g jn gj yugy gvgg gh ", overflow: TextOverflow.ellipsis, style: mediumFont,),
+                            trailing:message['read']
+                                ?  Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                    Icon(
+                                Icons.done_all,
+                                color: Colors.blue,
+                                size: 13,
+                              ),
+                                    Text(
+                                    timeago.format(
+                                    DateTime.parse(message['date_sent']),
+                                    locale: 'en_short') +
+                                    (timeago.format(
+                                    DateTime.parse(message['date_sent']),
+                                    locale: 'en_short') ==
+                                    'now'
+                                    ? ""
+                                        : " ago"),
+                                    style: smallFont.copyWith(fontSize: 11),
+                                    )
+                                    ],)
+                                :  Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                              Card(
+                                elevation: 5,
+                                color: Colors.grey,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: Text(
+                                      "unread",
+                                      style: smallFont.copyWith(color: Colors.white, fontSize: 12)
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                timeago.format(
+                                    DateTime.parse(message['date_sent']),
+                                    locale: 'en_short') +
+                                    (timeago.format(
+                                        DateTime.parse(message['date_sent']),
+                                        locale: 'en_short') ==
+                                        'now'
+                                        ? ""
+                                        : " ago"),
+                                style: smallFont.copyWith(fontSize: 10),
+                              )
+                            ],),
                           )
-                      else
-                        const Center(
-                          child: Text("No constituents"),
-                        )
-                    ],
+
+                      ],
+                    ),
                   ),
                 ),
-              )
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        if (_pro.allConstituents != null &&
+                            _pro.allConstituents!.isNotEmpty)
+                          for (var con in _pro.allConstituents!)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10.0),
+                              child: InkWell(
+                                onTap: () =>
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ChatMP(
+                                                  conId: con['system_id_for_user'],
+                                                  con: con,
+                                                ))),
+                                child: Row(
+                                  children: [
+                                    const CircleAvatar(
+                                      radius: 20,
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${con['full_name']}",
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        Text(
+                                          "${con['email']}",
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                            )
+                        else
+                          const Center(
+                            child: Text("No constituents"),
+                          )
+                      ],
+                    ),
+                  ),
+                )
+            ],
+
+            ))
+          ],
+        )
       else
         Container(),
+
       Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+
           Expanded(
-            child: SingleChildScrollView(
-              controller: _controller,
-              child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      if (_forumMessages.isNotEmpty)
-                        for (var data in _forumMessages)
-                          Column(
-                            crossAxisAlignment: data['userId'] !=
-                                    data['sender']['system_id_for_user']
-                                ? CrossAxisAlignment.start
-                                : CrossAxisAlignment.end,
-                            children: [
-                              Row(
-                                mainAxisAlignment: data['userId'] !=
-                                        data['sender']['system_id_for_user']
+              child: _forumMessages.isEmpty ? Container(
+                child: const Center(child: Text("No Messages", style: bigFont,),),) :
+              ListView.builder(
+                controller: _forumcontroller,
+                  itemCount: _forumMessages.length,
+                  itemBuilder: (context, index) {
+                    return Column(
+                      crossAxisAlignment: _forumMessages[index]['userId'] !=
+                          _forumMessages[index]['sender']['system_id_for_user']
+                          ? CrossAxisAlignment.start
+                          : CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisAlignment: _forumMessages[index]['userId'] !=
+                              _forumMessages[index]['sender']['system_id_for_user']
+                              ? MainAxisAlignment.start
+                              : MainAxisAlignment.end,
+                          children: [
+                            if (_forumMessages[index]['sender']['system_id_for_user'] ==
+                                mpId)
+                              const Icon(
+                                Icons.check_circle,
+                                color: appColor,
+                                size: 20,
+                              ),
+                            const SizedBox(
+                              width: 3,
+                            ),
+                            Text(
+                              "${_forumMessages[index]['sender']['full_name']}",
+                              style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                            padding:
+                            const EdgeInsets.only(bottom: 15, top: 2),
+                            child: Row(
+                                mainAxisAlignment: _forumMessages[index]['userId'] !=
+                                    _forumMessages[index]['sender']
+                                    ['system_id_for_user']
                                     ? MainAxisAlignment.start
                                     : MainAxisAlignment.end,
                                 children: [
-                                  if (data['sender']['system_id_for_user'] ==
-                                      mpId)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: appColor,
-                                      size: 20,
-                                    ),
-                                  const SizedBox(
-                                    width: 3,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        color: _forumMessages[index]['userId'] ==
+                                            _forumMessages[index]['sender']
+                                            ['system_id_for_user']
+                                            ? Colors.grey.withOpacity(0.2)
+                                            : Colors.blueGrey,
+                                        borderRadius: BorderRadius.only(
+                                            topRight: Radius.circular(
+                                                _forumMessages[index][
+                                                'userId'] ==
+                                                    _forumMessages[index]['sender'][
+                                                    'system_id_for_user']
+                                                    ? 0
+                                                    : 6),
+                                            topLeft: Radius.circular(
+                                              _forumMessages[index]['userId'] ==
+                                                  _forumMessages[index]['sender'][
+                                                  'system_id_for_user']
+                                                  ? 6
+                                                  : 0,
+                                            ),
+                                            bottomLeft:
+                                            const Radius.circular(6),
+                                            bottomRight:
+                                            const Radius.circular(
+                                                6))),
+                                    child: Column(
+                                        crossAxisAlignment: _forumMessages[index][
+                                        'userId'] ==
+                                            _forumMessages[index]['sender']
+                                            ['system_id_for_user']
+                                            ? CrossAxisAlignment.end
+                                            : CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                              constraints: BoxConstraints(
+                                                  minWidth: 0.0,
+                                                  maxWidth: MediaQuery
+                                                      .of(
+                                                      context)
+                                                      .size
+                                                      .width *
+                                                      0.65),
+                                              padding:
+                                              const EdgeInsets.only(
+                                                  left: 10,
+                                                  right: 10,
+                                                  top: 6,
+                                                  bottom: 4),
+                                              child: Text(
+                                                "${_forumMessages[index]['msg'] ??
+                                                    _forumMessages[index]['message']}",
+                                                style: TextStyle(
+                                                    color: _forumMessages[index]['userId'] ==
+                                                        _forumMessages[index]['sender']
+                                                        [
+                                                        'system_id_for_user']
+                                                        ? Colors.black
+                                                        : Colors.white,
+                                                    fontSize: 15),
+                                                textAlign:
+                                                TextAlign.start,
+                                              )),
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                            children: [
+                                              Padding(
+                                                padding:
+                                                const EdgeInsets.only(
+                                                    right: 5.0,
+                                                    bottom: 5,
+                                                    left: 5),
+                                                child: Text(
+                                                  timeago.format(
+                                                      _forumMessages[index]['date'],
+                                                      locale:
+                                                      'en_short') +
+                                                      (timeago.format(
+                                                          _forumMessages[index][
+                                                          'date'],
+                                                          locale:
+                                                          'en_short') ==
+                                                          'now'
+                                                          ? ""
+                                                          : " ago"),
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: _forumMessages[index]['userId'] ==
+                                                          _forumMessages[index]['sender']
+                                                          [
+                                                          'system_id_for_user']
+                                                          ? Colors.black
+                                                          : Colors.white,
+                                                      fontWeight:
+                                                      FontWeight
+                                                          .w600),
+                                                ),
+                                              )
+                                            ],
+                                          )
+                                        ]),
                                   ),
-                                  Text(
-                                    "${data['sender']['full_name']}",
-                                    style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 15, top: 2),
-                                  child: Row(
-                                      mainAxisAlignment: data['userId'] !=
-                                              data['sender']
-                                                  ['system_id_for_user']
-                                          ? MainAxisAlignment.start
-                                          : MainAxisAlignment.end,
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                              color: data['userId'] ==
-                                                      data['sender']
-                                                          ['system_id_for_user']
-                                                  ? Colors.grey.withOpacity(0.2)
-                                                  : Colors.blueGrey,
-                                              borderRadius: BorderRadius.only(
-                                                  topRight: Radius.circular(data[
-                                                              'userId'] ==
-                                                          data['sender'][
-                                                              'system_id_for_user']
-                                                      ? 0
-                                                      : 6),
-                                                  topLeft: Radius.circular(
-                                                    data['userId'] ==
-                                                            data['sender'][
-                                                                'system_id_for_user']
-                                                        ? 6
-                                                        : 0,
-                                                  ),
-                                                  bottomLeft:
-                                                      const Radius.circular(6),
-                                                  bottomRight:
-                                                      const Radius.circular(
-                                                          6))),
-                                          child: Column(
-                                              crossAxisAlignment: data[
-                                                          'userId'] ==
-                                                      data['sender']
-                                                          ['system_id_for_user']
-                                                  ? CrossAxisAlignment.end
-                                                  : CrossAxisAlignment.end,
-                                              children: [
-                                                Container(
-                                                    constraints: BoxConstraints(
-                                                        minWidth: 0.0,
-                                                        maxWidth: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.65),
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            left: 10,
-                                                            right: 10,
-                                                            top: 6,
-                                                            bottom: 4),
-                                                    child: Text(
-                                                      "${data['msg'] ?? data['message']}",
-                                                      style: TextStyle(
-                                                          color: data['userId'] ==
-                                                                  data['sender']
-                                                                      [
-                                                                      'system_id_for_user']
-                                                              ? Colors.black
-                                                              : Colors.white,
-                                                          fontSize: 13),
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                    )),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              right: 5.0,
-                                                              bottom: 5,
-                                                              left: 5),
-                                                      child: Text(
-                                                        timeago.format(
-                                                                data['date'],
-                                                                locale:
-                                                                    'en_short') +
-                                                            (timeago.format(
-                                                                        data[
-                                                                            'date'],
-                                                                        locale:
-                                                                            'en_short') ==
-                                                                    'now'
-                                                                ? ""
-                                                                : " ago"),
-                                                        style: TextStyle(
-                                                            fontSize: 10,
-                                                            color: data['userId'] ==
-                                                                    data['sender']
-                                                                        [
-                                                                        'system_id_for_user']
-                                                                ? Colors.black
-                                                                : Colors.white,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600),
-                                                      ),
-                                                    )
-                                                  ],
-                                                )
-                                              ]),
-                                        ),
-                                      ]))
-                            ],
-                          )
-                      else
-                        const Center(
-                          child: Text(
-                            "No Messages",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        )
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                                ]))
+                      ],
+                    );
+                  })
           ),
           Row(
             children: [
@@ -794,29 +980,27 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom * 0.006),
+                      bottom: MediaQuery
+                          .of(context)
+                          .viewInsets
+                          .bottom * 0.006),
                   child: Container(
                     constraints: BoxConstraints(
                         minHeight: 0,
-                        maxHeight: MediaQuery.of(context).size.height * 0.17),
+                        maxHeight: MediaQuery
+                            .of(context)
+                            .size
+                            .height * 0.17),
                     decoration: BoxDecoration(
                         color: Colors.grey.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8)),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10.0),
                       child: TextField(
-                        onTap: () {
-                          // print("Tappeddd");
-                          // _controller.animateTo(
-                          //   _controller.position.maxScrollExtent,
-                          //   duration: const Duration(seconds: 1),
-                          //   curve: Curves.fastOutSlowIn,
-                          // );
-                        },
-                        controller: _messageText,
+                        controller: _forumText,
                         decoration: kTextFieldDecoration.copyWith(
                             hintText: "Type message here...",
-                            hintStyle: const TextStyle(fontSize: 11)),
+                            hintStyle: const TextStyle(fontSize: 14)),
                         keyboardType: TextInputType.multiline,
                         maxLines: null,
                       ),
@@ -825,13 +1009,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(right: 7.0, left: 7.0, bottom: 5.0),
+                padding: const EdgeInsets.only(right: 7.0, left: 7.0, bottom: 5.0),
                 child: InkWell(
                     onTap: () {
-                      SendForumMessage(_pro.userData!, _messageText.text);
-                      _messageText.clear();
+                      Timer(
+                        const Duration(milliseconds: 300),
+                            () =>
+                                _forumcontroller.jumpTo(_forumcontroller
+                                .position.maxScrollExtent),
+                      );
+                      SendForumMessage(_pro.userData!, _forumText.text);
+                      _forumText.clear();
                     },
-                    child: Icon(
+                    child: const Icon(
                       Icons.send,
                       size: 28,
                     )),
@@ -844,125 +1034,164 @@ class _HomePageState extends State<HomePage> {
     ];
     return _pro.userData == null || _pro.projects == null
         ? const Scaffold(
-            body: Center(
-              child: MyProgressIndicator(),
+      body: Center(
+        child: MyProgressIndicator(),
+      ),
+    )
+        : Stack(
+      children: [
+        Scaffold(
+          key: _key,
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: Text(
+              "Omanbapa",
+              style:
+              GoogleFonts.lobster(color: Colors.white, fontSize: 30),
+            ),
+            actions: [
+              availableConts.length < 2 || _pro.userData!['is_mp']
+                  ? Container()
+                  : _pro.userData!['constituency'].length < 2
+                  ? IconButton(
+                  onPressed: () {
+                    secRegitration();
+                  },
+                  icon: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ))
+                  : IconButton(
+                  onPressed: () {
+                    switchConst();
+                  },
+                  icon: const Icon(
+                    Icons.change_circle,
+                    color: Colors.white,
+                  )),
+              IconButton(
+                  onPressed: () => _key.currentState!.openDrawer(),
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Colors.white,
+                  ))
+            ],
+          ),
+          drawer: MyDrawer(
+            assessment: ass_on, ir: unreadIncident, rf: unreadRequest,),
+          body: SmartRefresher(
+            enablePullDown: true,
+            header: const WaterDropMaterialHeader(),
+            controller: _refreshController,
+            onRefresh: _onRefresh,
+            child: SafeArea(child: _screen[_selectedIndex]),
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            items: <BottomNavigationBarItem>[
+              const BottomNavigationBarItem(
+                tooltip: "Home",
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+
+              BottomNavigationBarItem(
+                tooltip: "Chat",
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.chat),
+                    if(_pro.userData!['is_mp'] && unreadMessages > 0)
+                      Positioned(
+                          right: -10,
+                          top: -10,
+                          child: Card(
+                            color: Colors.teal,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Text("$unreadMessages",
+                                style: const TextStyle(fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white),),
+                            ),
+                          ))
+                  ],
+                ),
+                label: 'Chat',
+              ),
+              if(forum_on)
+
+                const BottomNavigationBarItem(
+                  tooltip: "Forum",
+                  icon: Icon(Icons.forum),
+                  label: ' Forum',
+                ),
+              const BottomNavigationBarItem(
+                tooltip: "Profile",
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            selectedItemColor: appColor,
+            selectedFontSize: 15.0,
+            unselectedItemColor: Colors.black54,
+            showUnselectedLabels: true,
+            unselectedLabelStyle: const TextStyle(fontSize: 14),
+            unselectedIconTheme: const IconThemeData(size: 22),
+            onTap: _onItemTapped,
+          ),
+          floatingActionButton:
+          _pro.userData!['is_mp'] && _selectedIndex == 0
+              ? FloatingActionButton(
+            onPressed: () {
+              selectPostOrProject();
+            },
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
             ),
           )
-        : Stack(
-            children: [
-              Scaffold(
-                key: _key,
-                appBar: AppBar(
-                  automaticallyImplyLeading: false,
-                  title: Text(
-                    "Omanbapa",
-                    style:
-                        GoogleFonts.lobster(color: Colors.white, fontSize: 25),
-                  ),
-                  actions: [
-                    availableConts.length < 2 || _pro.userData!['is_mp']
-                        ? Container()
-                        : _pro.userData!['constituency'].length < 2
-                            ? IconButton(
-                                onPressed: () {
-                                  secRegitration();
-                                },
-                                icon: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                ))
-                            : IconButton(
-                                onPressed: () {
-                                  switchConst();
-                                },
-                                icon: const Icon(
-                                  Icons.change_circle,
-                                  color: Colors.white,
-                                )),
-                    IconButton(
-                        onPressed: () => _key.currentState!.openDrawer(),
-                        icon: const Icon(
-                          Icons.menu,
-                          color: Colors.white,
-                        ))
-                  ],
+              : Container(),
+        ),
+        if (!_pro.userData!['is_mp'] && ac_on)
+          Positioned(
+            right: 0,
+            top: MediaQuery
+                .of(context)
+                .size
+                .height * 0.3,
+            child: TextButton(
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(appColor)),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ActionPlanCon()));
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Icon(
+                  Icons.notifications_active,
+                  color: Colors.white,
                 ),
-                drawer:  MyDrawer(assessment: ass_on,),
-                body: SmartRefresher(
-                  enablePullDown: true,
-                  header: const WaterDropMaterialHeader(),
-                  controller: _refreshController,
-                  onRefresh: _onRefresh,
-                  child: SafeArea(child: _screen[_selectedIndex]),
-                ),
-                bottomNavigationBar: BottomNavigationBar(
-                  items:  <BottomNavigationBarItem>[
-                    const BottomNavigationBarItem(
-                      tooltip: "Home",
-                      icon: Icon(Icons.home),
-                      label: 'Home',
-                    ),
-                    const BottomNavigationBarItem(
-                      tooltip: "Chat",
-                      icon: Icon(Icons.chat),
-                      label: 'Chat',
-                    ),
-                    if(forum_on)
-                    const BottomNavigationBarItem(
-                      tooltip: "Forum",
-                      icon: Icon(Icons.forum),
-                      label: ' Forum',
-                    ),
-                    const BottomNavigationBarItem(
-                      tooltip: "Profile",
-                      icon: Icon(Icons.person),
-                      label: 'Profile',
-                    ),
-                  ],
-                  currentIndex: _selectedIndex,
-                  selectedItemColor: appColor,
-                  unselectedItemColor: Colors.black54,
-                  showUnselectedLabels: true,
-                  unselectedLabelStyle: const TextStyle(fontSize: 11),
-                  unselectedIconTheme: const IconThemeData(size: 22),
-                  onTap: _onItemTapped,
-                ),
-                floatingActionButton:
-                    _pro.userData!['is_mp'] && _selectedIndex == 0
-                        ? FloatingActionButton(
-                            onPressed: () {
-                              selectPostorProject();
-                            },
-                            child: const Icon(
-                              Icons.add,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Container(),
               ),
-              if (!_pro.userData!['is_mp'] && ac_on)
-                Positioned(
-                  right: 0,
-                  top: MediaQuery.of(context).size.height * 0.3,
-                  child: TextButton(
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(appColor)),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => ActionPlanCon()));
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: Icon(
-                        Icons.notifications_active,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                )
-            ],
-          );
+            ),
+          )
+      ],
+    );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

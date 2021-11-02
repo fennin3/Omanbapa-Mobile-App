@@ -125,7 +125,7 @@ class _IncidentReportConState extends State<IncidentReportCon> {
                   const SizedBox(height: 10),
                   TextFormField(
 
-                    style: const TextStyle(fontSize: 14),
+                    style: mediumFont,
                     controller: _subject,
                     validator: (e) {
                       if (_subject.text.isEmpty) {
@@ -134,7 +134,7 @@ class _IncidentReportConState extends State<IncidentReportCon> {
                         return null;
                       }
                     },
-                    decoration: inputFormDeco.copyWith(labelText: "Subject", labelStyle: TextStyle(fontSize: 11)),
+                    decoration: inputFormDeco.copyWith(labelText: "Subject", labelStyle: smallFont),
                     keyboardType: TextInputType.text,
                   ),
 
@@ -150,7 +150,7 @@ class _IncidentReportConState extends State<IncidentReportCon> {
                     children: [
                       const Text(
                         "Attach File",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(
                         height: 8,

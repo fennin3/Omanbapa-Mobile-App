@@ -106,11 +106,11 @@ class _PostWidgetState extends State<PostWidget> {
                     Text(
                       "${widget.project['name']}",
                       style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w700),
+                          fontSize: 13, fontWeight: FontWeight.w700),
                     ),
                     Text(
                       "${widget.project['place']}",
-                      style: const TextStyle(fontSize: 11),
+                      style: const TextStyle(fontSize: 14),
                     ),
                   ],
                 ),
@@ -119,7 +119,7 @@ class _PostWidgetState extends State<PostWidget> {
                   timeago.format(DateTime.parse(widget.project['date_posted']),
                       locale: 'en_short') + " ago",
                   style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600),
+                      fontSize: 14, fontWeight: FontWeight.w600),
                 )
               ],
             ),
@@ -132,7 +132,7 @@ class _PostWidgetState extends State<PostWidget> {
             child: Text(
               "${widget.project['description']}",
               textAlign: TextAlign.start,
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 15),
             ),
           ),
           if (widget.project['media'] != null)
@@ -160,7 +160,7 @@ class _PostWidgetState extends State<PostWidget> {
               children: [
                 Text(
                   "$likes \tLikes \t\t $comments \tComments",
-                  style: TextStyle(fontSize: 11),
+                  style: TextStyle(fontSize: 14),
                 )
               ],
             ),
@@ -192,7 +192,7 @@ class _PostWidgetState extends State<PostWidget> {
                         "Like",
                         style: TextStyle(
                             color: !liked ? Colors.black54 : appColor,
-                            fontSize: liked ? 13 : 12),
+                            fontSize: liked ? 16 : 15),
                       )
                     ],
                   ),
@@ -217,7 +217,7 @@ class _PostWidgetState extends State<PostWidget> {
                       ),
                       Text(
                         "Comment",
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                        style: TextStyle(color: Colors.black54, fontSize: 15),
                       )
                     ],
                   ),

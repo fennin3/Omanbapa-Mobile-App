@@ -206,7 +206,7 @@ class _CreatePostState extends State<CreatePost> {
                       width: size.width * 0.9,
                       child: TextFormField(
                         maxLines: 2,
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 15),
                         controller: _caption,
                         validator: (e) {
                           if (_caption.text.isEmpty) {

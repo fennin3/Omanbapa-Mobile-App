@@ -206,7 +206,7 @@ class _CreateProjectState extends State<CreateProject> {
                   Container(
                     width: size.width * 0.9,
                     child: TextFormField(
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 15),
                       controller: _name,
                       validator: (e) {
                         if (_name.text.isEmpty) {
@@ -226,7 +226,7 @@ class _CreateProjectState extends State<CreateProject> {
                   Container(
                     width: size.width * 0.9,
                     child: TextFormField(
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 15),
                       controller: _place,
                       validator: (e) {
                         if (_place.text.isEmpty) {
@@ -246,7 +246,7 @@ class _CreateProjectState extends State<CreateProject> {
                     width: size.width * 0.9,
                     child: TextFormField(
                       maxLines: 4,
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 15),
                       controller: _description,
                       validator: (e) {
                         if (_description.text.isEmpty) {

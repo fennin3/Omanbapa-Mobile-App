@@ -6,6 +6,7 @@ class GeneralData with ChangeNotifier{
   Map? userData;
   List? projects;
   List? allConstituents=[];
+  List? allusers=[];
   Map? requestnotifications;
 
 
@@ -24,6 +25,12 @@ class GeneralData with ChangeNotifier{
 
   void getAllConstituents()async{
     allConstituents = await MyFunc.allConsttuents();
+
+    notifyListeners();
+  }
+
+  void getAllUsers()async{
+    allusers = await MyFunc.AllUsers();
 
     notifyListeners();
   }

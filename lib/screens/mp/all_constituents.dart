@@ -5,6 +5,7 @@ import 'package:omanbapa/screens/components/update_const_status.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 
 class AllConstituents extends StatefulWidget {
   const AllConstituents({Key? key}) : super(key: key);
@@ -25,6 +26,7 @@ class _AllConstituentsState extends State<AllConstituents> {
 
     setState(() {
       _data = _pro.allConstituents!.where((element) => element['full_name'].toString().toLowerCase().contains(query.toLowerCase()) || element['email'].toString().toLowerCase().contains(query.toLowerCase())).toList();
+      _data = _data.reversed.toList();
     });
   }
 
@@ -39,6 +41,14 @@ class _AllConstituentsState extends State<AllConstituents> {
         builder: (context) {
           return UpdateConstituent(status: status,conId: conId,);
         });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    final _pro = Provider.of<GeneralData>(context, listen: false);
+    _pro.getAllConstituents();
   }
 
   @override
@@ -63,11 +73,11 @@ class _AllConstituentsState extends State<AllConstituents> {
                 color: Colors.white, borderRadius: BorderRadius.circular(5)),
             child: Center(
               child: TextFormField(
-                style: const TextStyle(fontSize: 12),
+                style: mediumFont,
                 decoration: const InputDecoration(
                     border: InputBorder.none,
                     hintText: "search here ...",
-                    hintStyle: TextStyle(fontSize: 10)),
+                    hintStyle: TextStyle(fontSize: 13)),
                 onChanged: (e){
                   setState(() {
                     query=e;
@@ -114,15 +124,15 @@ class _AllConstituentsState extends State<AllConstituents> {
                                 const VisualDensity(horizontal: 0, vertical: -3),
                             title: Text(
                               "${con['full_name']}",
-                              style: const TextStyle(fontSize: 12),
+                              style: bigFont,
                             ),
                             subtitle: Text(
                               "${con['email']}",
-                              style: const TextStyle(fontSize: 11),
+                              style: mediumFont,
                             ),
                             trailing: const Text(
                               "slide <<<",
-                              style: TextStyle(fontSize: 10),
+                              style: smallFont,
                             ),
                           ),
                         ),

@@ -26,6 +26,7 @@ class _ChatMPState extends State<ChatMP> {
   List? _indieMessages;
   final TextEditingController _messageText = TextEditingController();
   bool _loading =false;
+  ScrollController _indiecontroller = ScrollController();
 
   IO.Socket socket =
   IO.io('https://sapa-chatsystem.herokuapp.com/chat', <String, dynamic>{
@@ -33,6 +34,14 @@ class _ChatMPState extends State<ChatMP> {
     'extraHeaders': {'foo': 'bar'} // optional
   });
 
+  void setUnreadIndieMessages()async{
+    final userId = await UserLocalData.userID();
+    try{
+      http.Response response = await http.post(Uri.parse(base_url + "general/set-unread-messages-to-read/$userId/${widget.conId}/"));
+      if(response.statusCode < 206){}
+      else{print(response.body);}
+    }catch(e){}
+  }
 
   void getMessages()async{
     setState(() {
@@ -97,7 +106,6 @@ class _ChatMPState extends State<ChatMP> {
   void SendIndividualMessage(sender, message)async{
     socket.emit('text', {"sender":sender, "message":message});
 
-
     final Map  _data = {
         "sender":sender['system_id_for_user'],
         "receiver":widget.conId,
@@ -120,6 +128,7 @@ class _ChatMPState extends State<ChatMP> {
     super.initState();
     getMessages();
     socketInit();
+    setUnreadIndieMessages();
   }
 
   @override
@@ -131,6 +140,11 @@ class _ChatMPState extends State<ChatMP> {
   @override
   Widget build(BuildContext context) {
     final _pro = Provider.of<GeneralData>(context,listen: true);
+
+    if (_indieMessages!.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 50)).then((value) =>
+          _indiecontroller.jumpTo(_indiecontroller.position.maxScrollExtent));
+    }
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -153,6 +167,7 @@ class _ChatMPState extends State<ChatMP> {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                controller: _indiecontroller,
                 child: Container(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -217,7 +232,7 @@ class _ChatMPState extends State<ChatMP> {
                                                               data['sender']['system_id_for_user']
                                                               ? Colors.black
                                                               : Colors.white,
-                                                          fontSize: 13),
+                                                          fontSize: 15),
                                                       textAlign: TextAlign.start,
                                                     ),
                                                   ),
@@ -238,7 +253,7 @@ class _ChatMPState extends State<ChatMP> {
                                                                   ? ""
                                                                   : " ago"),
                                                           style: TextStyle(
-                                                              fontSize: 10,
+                                                              fontSize: 12,
                                                               color: data['userId'] ==
                                                                   data['sender'][
                                                                   'system_id_for_user']
@@ -255,7 +270,7 @@ class _ChatMPState extends State<ChatMP> {
                               ],
                             )
                         else
-                          const Center(child: Text("No Messages", style: TextStyle(fontSize: 12),),)
+                          const Center(child: Text("No Messages", style: TextStyle(fontSize: 16),),)
                       ],
                     ),
                   ),
@@ -279,7 +294,7 @@ class _ChatMPState extends State<ChatMP> {
                             controller: _messageText,
                             decoration: kTextFieldDecoration.copyWith(
                                 hintText: "Type message here...",
-                                hintStyle: const TextStyle(fontSize: 11)
+                                hintStyle: const TextStyle(fontSize: 14)
                             ),
                             keyboardType: TextInputType.multiline,
                             maxLines: null,
@@ -289,13 +304,15 @@ class _ChatMPState extends State<ChatMP> {
                     ),
                   ),
                   Padding(
-                    padding:  EdgeInsets.only(right: 7.0, left: 7.0, bottom: 5.0),
+                    padding:  const EdgeInsets.only(right: 7.0, left: 7.0, bottom: 5.0),
                     child: InkWell(
                         onTap: (){
+                          Future.delayed(const Duration(milliseconds: 300)).then((value) =>
+                              _indiecontroller.jumpTo(_indiecontroller.position.maxScrollExtent));
                           SendIndividualMessage(_pro.userData,_messageText.text);
                           _messageText.clear();
                         },
-                        child: Icon(Icons.send, size: 28,)),
+                        child: const Icon(Icons.send, size: 28,)),
                   )
                 ],
               ),
