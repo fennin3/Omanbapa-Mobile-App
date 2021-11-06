@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:omanbapa/local_data/user_info.dart';
@@ -111,10 +112,16 @@ class _ProjectWidgetState extends State<ProjectWidget> {
                   ],
                 ),
                 const Expanded(child: SizedBox()),
-                Text(
-                  timeago.format(DateTime.parse(widget.project['date_posted']),
-                      locale: 'en_short') + " ago",
-                  style: mediumFont.copyWith(fontWeight: FontWeight.w600)
+                Column(
+                  children: [
+                    Text(
+                        timeago.format(DateTime.parse(widget.project['date_posted']),
+                            locale: 'en_short') + " ago",
+                        style: mediumFont.copyWith(fontWeight: FontWeight.w600, fontSize: 13)
+                    ),
+                    Text("Project Post", style: GoogleFonts.bebasNeue(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w500),)
+
+                  ],
                 )
               ],
             ),

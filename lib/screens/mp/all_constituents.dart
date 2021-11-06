@@ -130,26 +130,13 @@ class _AllConstituentsState extends State<AllConstituents> {
                               "${con['email']}",
                               style: mediumFont,
                             ),
-                            trailing: const Text(
+                            trailing:  Text(
                               "slide <<<",
-                              style: smallFont,
+                              style: smallFont.copyWith(fontSize: 13),
                             ),
                           ),
                         ),
-                        // actions: <Widget>[
-                        //   IconSlideAction(
-                        //     caption: 'Archive',
-                        //     color: Colors.blue,
-                        //     icon: Icons.archive,
-                        //     onTap: () => _showSnackBar('Archive'),
-                        //   ),
-                        //   IconSlideAction(
-                        //     caption: 'Share',
-                        //     color: Colors.indigo,
-                        //     icon: Icons.share,
-                        //     onTap: () => _showSnackBar('Share'),
-                        //   ),
-                        // ],
+
                         secondaryActions: <Widget>[
                           IconSlideAction(
                             caption: 'Edit',

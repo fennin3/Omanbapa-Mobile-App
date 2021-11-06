@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:omanbapa/provider/provider_class.dart';
 import 'package:omanbapa/utils.dart';
+import 'package:provider/provider.dart';
 
 class CreatePost extends StatefulWidget {
   const CreatePost({Key? key}) : super(key: key);
@@ -128,6 +130,7 @@ class _CreatePostState extends State<CreatePost> {
   }
 
   void createPost(String? filepath) async {
+    final _pro = Provider.of<GeneralData>(context, listen: false);
     setState(() {
       _loading = true;
     });
@@ -136,8 +139,11 @@ class _CreatePostState extends State<CreatePost> {
       "user_id": userId,
       "caption": _caption.text
     };
-    final response = http.MultipartRequest(
-        'POST', Uri.parse(base_url + "mp-operations/create-post/"));
+
+    final _url = !_pro.userData!['is_mp']
+        ? "constituent-operations/create-post-for-mp/"
+        : "mp-operations/create-post/";
+    final response = http.MultipartRequest('POST', Uri.parse(base_url + _url));
 
     if (_image != null) {
       response.files.add(await http.MultipartFile.fromPath("media", filepath!));
@@ -151,9 +157,8 @@ class _CreatePostState extends State<CreatePost> {
     var res = await http.Response.fromStream(streamedResponse);
 
     if (res.statusCode < 206) {
-      print(res.body);
       MyUtils.snack(context, "${json.decode(res.body)['message']}", 2);
-      Future.delayed(Duration(seconds: 1)).then((value){
+      Future.delayed(const Duration(seconds: 1)).then((value) {
         Navigator.pop(context);
         Navigator.pop(context);
       });
@@ -193,128 +198,127 @@ class _CreatePostState extends State<CreatePost> {
         ),
       ),
       body: Container(
-        child:  Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 20,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Center(
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Container(
+                    width: size.width * 0.9,
+                    child: TextFormField(
+                      maxLines: 2,
+                      style: const TextStyle(fontSize: 15),
+                      controller: _caption,
+                      validator: (e) {
+                        if (_caption.text.isEmpty) {
+                          return "Enter the post text";
+                        } else {
+                          return null;
+                        }
+                      },
+                      decoration: inputFormDeco.copyWith(labelText: "Text"),
+                      keyboardType: TextInputType.text,
                     ),
-                    Container(
-                      width: size.width * 0.9,
-                      child: TextFormField(
-                        maxLines: 2,
-                        style: const TextStyle(fontSize: 15),
-                        controller: _caption,
-                        validator: (e) {
-                          if (_caption.text.isEmpty) {
-                            return "Enter the post text";
-                          } else {
-                            return null;
-                          }
-                        },
-                        decoration: inputFormDeco.copyWith(labelText: "Text"),
-                        keyboardType: TextInputType.text,
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Stack(
+                    children: [
+                      Container(
+                        color: Colors.grey.withOpacity(0.2),
+                        height: 300,
+                        width: size.width * 0.9,
+                        child: _image == null
+                            ? const Center(
+                                child: Text(
+                                  "no image selected.\nImage not required",
+                                  style: TextStyle(color: Colors.black54),
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                            : Container(
+                                width: double.infinity,
+                                child: Image.file(
+                                  File(_image!.path),
+                                  fit: BoxFit.cover,
+                                )),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Stack(
-                      children: [
-                        Container(
-                          color: Colors.grey.withOpacity(0.2),
-                          height: 300,
-                          width: size.width * 0.9,
-                          child: _image == null
-                              ? const Center(
-                                  child: Text(
-                                    "no image selected.\nImage not required",
-                                    style: TextStyle(color: Colors.black54),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                )
-                              : Container(
-                                  width: double.infinity,
-                                  child: Image.file(
-                                    File(_image!.path),
-                                    fit: BoxFit.cover,
-                                  )),
-                        ),
-                        Positioned(
-                            bottom: 10,
-                            right: 10,
-                            child: InkWell(
-                              onTap: () => showImagePickerModal(),
-                              child: const Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(5.0),
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    color: appColor,
-                                  ),
+                      Positioned(
+                          bottom: 10,
+                          right: 10,
+                          child: InkWell(
+                            onTap: () => showImagePickerModal(),
+                            child: const Card(
+                              child: Padding(
+                                padding: EdgeInsets.all(5.0),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  color: appColor,
                                 ),
                               ),
-                            ))
+                            ),
+                          ))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  Container(
+                    width: size.width * 0.9,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            if (_formKey.currentState!.validate()) {
+                              createPost(_image == null ? "" : _image!.path);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            height: 40,
+                            decoration: BoxDecoration(
+                                color: appColor,
+                                borderRadius: BorderRadius.circular(7)),
+                            child: Center(
+                                child: !_loading
+                                    ? const Text(
+                                        "Create",
+                                        style: TextStyle(color: Colors.white),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text("Processing"),
+                                          const SizedBox(
+                                            width: 20,
+                                          ),
+                                          Container(
+                                            height: 20,
+                                            width: 20,
+                                            child:
+                                                const CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        ],
+                                      )),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Container(
-                      width: size.width * 0.9,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              if (_formKey.currentState!.validate()) {
-                                createPost(_image== null?"":_image!.path);
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              height: 40,
-                              decoration: BoxDecoration(
-                                  color: appColor,
-                                  borderRadius: BorderRadius.circular(7)),
-                              child: Center(
-                                  child: !_loading
-                                      ? const Text(
-                                          "Create",
-                                          style: TextStyle(color: Colors.white),
-                                        )
-                                      : Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Text("Processing"),
-                                            const SizedBox(
-                                              width: 20,
-                                            ),
-                                            Container(
-                                              height: 20,
-                                              width: 20,
-                                              child:
-                                                  const CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          ],
-                                        )),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
             ),
           ),
-
+        ),
       ),
     );
   }

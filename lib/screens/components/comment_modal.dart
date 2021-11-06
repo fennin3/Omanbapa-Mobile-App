@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:omanbapa/local_data/user_info.dart';
@@ -17,9 +19,11 @@ class Commentmodal extends StatefulWidget {
   _CommentmodalState createState() => _CommentmodalState();
 }
 
-class _CommentmodalState extends State<Commentmodal> {
+class _CommentmodalState extends State<Commentmodal> with SingleTickerProviderStateMixin {
   List _comments = [];
   final TextEditingController _text = TextEditingController();
+  ScrollController _commentController = ScrollController();
+
 
   setData() {
     setState(() {
@@ -52,6 +56,13 @@ class _CommentmodalState extends State<Commentmodal> {
         "date_posted": _date.toString()
       });
     });
+    Timer(
+        const Duration(milliseconds: 300),
+            () => _commentController.jumpTo(
+                _commentController
+                .position.maxScrollExtent));
+    Future.delayed(Duration(milliseconds: 200)).then((value) => Navigator.pop(context));
+
     comment(text);
   }
 
@@ -67,6 +78,7 @@ class _CommentmodalState extends State<Commentmodal> {
     // TODO: implement dispose
     super.dispose();
     _text.dispose();
+    _commentController.dispose();
   }
 
   @override
@@ -101,6 +113,7 @@ class _CommentmodalState extends State<Commentmodal> {
               Expanded(
                   child: Container(
                 child: SingleChildScrollView(
+                  controller: _commentController,
                   child: Column(
                     children: [
                       if (_comments.isEmpty)
@@ -216,7 +229,7 @@ class _CommentmodalState extends State<Commentmodal> {
                           }
                           _text.clear();
                         },
-                        child: Icon(Icons.send))
+                        child: const Icon(Icons.send))
                   ],
                 ),
                 color: Colors.black12,

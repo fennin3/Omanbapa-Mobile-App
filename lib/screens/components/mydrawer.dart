@@ -24,7 +24,13 @@ class MyDrawer extends StatelessWidget {
   final bool assessment;
   final int ir;
   final int rf;
-  MyDrawer({required this.assessment, required this.ir, required this.rf});
+  final bool notice;
+
+  MyDrawer(
+      {required this.assessment,
+      required this.ir,
+      required this.rf,
+      required this.notice});
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +43,15 @@ class MyDrawer extends StatelessWidget {
                 child: Center(
               child: Image.asset('assets/images/logo.jpg'),
             )),
-            if(_pro.userData!['is_assembly_man'])
+            if (_pro.userData!['is_assembly_man'] && _pro.userData!['active_constituency']['id'].toString()==_pro.userData!['assembly_man_for'].toString())
               ListTile(
                 onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ActionPlanApproval(),),);
-
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ActionPlanApproval(),
+                    ),
+                  );
                 },
                 leading: const Icon(Icons.next_plan),
                 title: const Text("Action Plan Approval"),
@@ -52,104 +59,119 @@ class MyDrawer extends StatelessWidget {
                 //     context, MaterialPageRoute(builder: (context) => AllVendors())),
               ),
 
-            if(_pro.userData!['is_mp'])
-             ExpansionTile(
-              title: const Text("Action Plan"),
-              leading: const Icon(Icons.summarize),
-              trailing: const Icon(Icons.keyboard_arrow_down, size: 18,),
-              children: [
-                ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ActionPlanArea(),),);
-
-                  },
-                  leading: const Icon(Icons.next_plan),
-                  title: const Text("Action Plan (area based) "),
-                  // onTap: () => Navigator.push(
-                  //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+            if (_pro.userData!['is_mp'])
+              ExpansionTile(
+                title: const Text("Action Plan"),
+                leading: const Icon(Icons.summarize),
+                trailing: const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
                 ),
-                ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ActionPlanSummary(),),);
-
-                  },
-                  leading: const Icon(Icons.summarize),
-                  title: const Text("Action Plan (Summary) "),
-                  // onTap: () => Navigator.push(
-                  //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+                children: [
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ActionPlanArea(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.next_plan),
+                    title: const Text("Action Plan (area based) "),
+                    // onTap: () => Navigator.push(
+                    //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+                  ),
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ActionPlanSummary(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.summarize),
+                    title: const Text("Action Plan (Summary) "),
+                    // onTap: () => Navigator.push(
+                    //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+                  ),
+                ],
+              ),
+            if (_pro.userData!['is_mp'])
+              ExpansionTile(
+                title: const Text("Manage Constituents"),
+                leading: const Icon(Icons.groups),
+                trailing: const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
                 ),
-              ],
-            ),
-            if(_pro.userData!['is_mp'])
-            ExpansionTile(
-              title: const Text("Manage Constituents"),
-              leading: const Icon(Icons.groups),
-              trailing: const Icon(Icons.keyboard_arrow_down, size: 18,),
-              children: [
-                ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AllConstituents(),),);
+                children: [
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AllConstituents(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.groups),
+                    title: const Text("All Constituents"),
+                    // onTap: () => Navigator.push(
+                    //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+                  ),
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddSubAdmin(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.person),
+                    title: const Text("Add Subadmin"),
+                    // onTap: () => Navigator.push(
+                    //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+                  ),
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MySubAdmins(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.people),
+                    title: const Text("My Subadmins"),
+                    // onTap: () => Navigator.push(
+                    //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+                  ),
+                ],
+              ),
 
-                  },
-                  leading: const Icon(Icons.groups),
-                  title: const Text("All Constituents"),
-                  // onTap: () => Navigator.push(
-                  //     context, MaterialPageRoute(builder: (context) => AllVendors())),
-                ),
-                ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddSubAdmin(),),);
-
-                  },
-                  leading: const Icon(Icons.person),
-                  title: const Text("Add Subadmin"),
-                  // onTap: () => Navigator.push(
-                  //     context, MaterialPageRoute(builder: (context) => AllVendors())),
-                ),
-                ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MySubAdmins(),),);
-
-                  },
-                  leading: const Icon(Icons.people),
-                  title: const Text("My Subadmins"),
-                  // onTap: () => Navigator.push(
-                  //     context, MaterialPageRoute(builder: (context) => AllVendors())),
-                ),
-              ],
-            ),
-
-
-
-            if(_pro.userData!['is_mp'] || _pro.userData!['is_constituent'] && assessment)
+            if (_pro.userData!['is_mp'] ||
+                _pro.userData!['is_constituent'] && assessment)
               ListTile(
                 onTap: () {
                   if (_pro.userData!['is_constituent']) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AssessmentCon(),),);
-                  }
-                  else{
+                        builder: (context) => AssessmentCon(
+                          notice: notice,
+                        ),
+                      ),
+                    );
+                  } else {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AssessmentSummary(),),);
+                        builder: (context) => const AssessmentSummary(),
+                      ),
+                    );
                   }
                 },
                 leading: const Icon(Icons.assessment),
@@ -165,8 +187,7 @@ class MyDrawer extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => const IncidentReportCon()));
-                }
-                else{
+                } else {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -175,12 +196,18 @@ class MyDrawer extends StatelessWidget {
               },
               leading: const Icon(Icons.report),
               title: const Text("Incident Report"),
-              trailing: _pro.userData!['is_mp'] && ir > 0 ? Card(
-                color: Colors.teal,
-                child: Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Text("$ir", style: const TextStyle(color: Colors.white),),
-              ),):const SizedBox(),
+              trailing: _pro.userData!['is_mp'] && ir > 0
+                  ? Card(
+                      color: Colors.teal,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Text(
+                          "$ir",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(),
               // onTap: () => Navigator.push(
               //     context, MaterialPageRoute(builder: (context) => AllVendors())),
             ),
@@ -191,8 +218,7 @@ class MyDrawer extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => const RequestFormCon()));
-                }
-                else{
+                } else {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -200,32 +226,35 @@ class MyDrawer extends StatelessWidget {
                 }
               },
               leading: const Icon(Icons.receipt_long_outlined),
-              title: const Text("Request Form"),
-              trailing: _pro.userData!['is_mp'] && rf > 0 ? Card(
-                color: Colors.teal,
-                child: Padding(
-                  padding: const EdgeInsets.all(5.0),
-                  child: Text("$rf", style: const TextStyle(color: Colors.white),),
-                ),):const SizedBox(),
+              title: _pro.userData!['is_mp']? const Text("Constituent's Request"): const Text("Request Form"),
+              trailing: _pro.userData!['is_mp'] && rf > 0
+                  ? Card(
+                      color: Colors.teal,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Text(
+                          "$rf",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(),
               // onTap: () => Navigator.push(
               //     context, MaterialPageRoute(builder: (context) => AllVendors())),
             ),
-            if(_pro.userData!['is_mp'])
-            ListTile(
-              onTap: () {
+            if (_pro.userData!['is_mp'] || (_pro.userData!['is_subadmin'] && _pro.userData!['active_constituency']['id'] == _pro.userData!['subadmin_for'] ))
+              ListTile(
+                onTap: () {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => const SendMail()));
-
-              },
-              leading: const Icon(Icons.mail),
-              title: const Text("Send Mail"),
-              // onTap: () => Navigator.push(
-              //     context, MaterialPageRoute(builder: (context) => AllVendors())),
-            ),
-
-
+                },
+                leading: const Icon(Icons.mail),
+                title: const Text("Send Mail"),
+                // onTap: () => Navigator.push(
+                //     context, MaterialPageRoute(builder: (context) => AllVendors())),
+              ),
 
             //Logout
             ListTile(
@@ -240,7 +269,7 @@ class MyDrawer extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (BuildContext context) => const LoginScreen(),
                   ),
-                      (Route<dynamic> route) => false,
+                  (Route<dynamic> route) => false,
                 );
               },
               leading: const Icon(Icons.logout),

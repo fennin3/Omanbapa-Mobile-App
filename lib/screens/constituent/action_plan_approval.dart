@@ -36,8 +36,7 @@ class _ActionPlanApprovalState extends State<ActionPlanApproval> {
       _mapData = [];
       setState(() {
         _actionPlans = json.decode(response.body);
-        print(_actionPlans);
-        print("**********");
+
         for (var i = 0; i < _actionPlans!['problem_titles'].length; i++) {
           _mapData.add({
             "title": _actionPlans!['problem_titles'][i],

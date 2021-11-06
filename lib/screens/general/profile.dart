@@ -176,74 +176,88 @@ class _ProfileState extends State<Profile> {
   Widget build(BuildContext context) {
     final _pro = Provider.of<GeneralData>(context, listen: true);
     final size = MediaQuery.of(context).size;
-    return ModalProgressHUD(
-      inAsyncCall: _loading,
-      child: Container(
-        child: _pro.userData == null
-            ? const Center(
-                child: MyProgressIndicator(),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: size.height * 0.02,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        leading: IconButton(onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_ios, color: Colors.white,),),
+        title: const Text(
+          "Profile",
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+      body: SafeArea(
+        child: ModalProgressHUD(
+          inAsyncCall: _loading,
+          child: Container(
+            child: _pro.userData == null
+                ? const Center(
+                    child: MyProgressIndicator(),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Stack(
+                      SizedBox(
+                        height: size.height * 0.04,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundImage: NetworkImage(
-                                base_url2 + _pro.userData!['profile_picture']),
-                          ),
-                          Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: InkWell(
-                                onTap: () => showImagePickerModal(),
-                                child: const Card(
-                                  color: appColor,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(3.0),
-                                    child: Icon(
-                                      Icons.edit,
-                                      color: Colors.white,
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 60,
+                                backgroundImage: NetworkImage(
+                                    base_url2 + _pro.userData!['profile_picture']),
+                              ),
+                              Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: InkWell(
+                                    onTap: () => showImagePickerModal(),
+                                    child: const Card(
+                                      color: appColor,
+                                      child: Padding(
+                                        padding: EdgeInsets.all(3.0),
+                                        child: Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ))
+                                  ))
+                            ],
+                          )
                         ],
-                      )
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const Center(
+                          child: Text(
+                        "Change profile picture",
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      )),
+                      ProfileWidget(
+                        size: size,
+                        text: "Full Name",
+                        text2: "${_pro.userData!['full_name']}",
+                      ),
+                      ProfileWidget(
+                        size: size,
+                        text: "Email",
+                        text2: "${_pro.userData!['email']}",
+                      ),
+                      ProfileWidget(
+                        size: size,
+                        text: "Phone",
+                        text2: "${_pro.userData!['contact']}",
+                      ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  const Center(
-                      child: Text(
-                    "Change profile picture",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  )),
-                  ProfileWidget(
-                    size: size,
-                    text: "Full Name",
-                    text2: "${_pro.userData!['full_name']}",
-                  ),
-                  ProfileWidget(
-                    size: size,
-                    text: "Email",
-                    text2: "${_pro.userData!['email']}",
-                  ),
-                  ProfileWidget(
-                    size: size,
-                    text: "Phone",
-                    text2: "${_pro.userData!['contact']}",
-                  ),
-                ],
-              ),
+          ),
+        ),
       ),
     );
   }

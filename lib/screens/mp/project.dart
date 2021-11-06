@@ -6,7 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:omanbapa/local_data/user_info.dart';
+import 'package:omanbapa/provider/provider_class.dart';
 import 'package:omanbapa/utils.dart';
+import 'package:provider/provider.dart';
 
 class CreateProject extends StatefulWidget {
   const CreateProject({Key? key}) : super(key: key);
@@ -131,6 +133,7 @@ class _CreateProjectState extends State<CreateProject> {
   }
 
   void createProject(String? filepath) async {
+    final _pro = Provider.of<GeneralData>(context, listen: false);
     setState(() {
       _loading = true;
     });
@@ -141,8 +144,10 @@ class _CreateProjectState extends State<CreateProject> {
       "place": _place.text,
       "description": _description.text
     };
+    final _url = !_pro.userData!['is_mp'] ? "constituent-operations/create-project-for-mp/":"mp-operations/create-project/";
+
     final response = http.MultipartRequest(
-        'POST', Uri.parse(base_url + "mp-operations/create-project/"));
+        'POST', Uri.parse(base_url + _url));
 
     if (_image != null) {
       response.files.add(await http.MultipartFile.fromPath("media", filepath!));

@@ -12,7 +12,9 @@ import 'package:dropdown_search/dropdown_search.dart';
 
 
 class ActionPlanCon extends StatefulWidget {
-  const ActionPlanCon({Key? key}) : super(key: key);
+  final bool notice;
+
+  const ActionPlanCon({required this.notice});
 
   @override
   _ActionPlanConState createState() => _ActionPlanConState();
@@ -57,7 +59,6 @@ class _ActionPlanConState extends State<ActionPlanCon> {
 
   }
 
-
   void getACTitles()async{
     http.Response response = await http.get(Uri.parse(base_url + "constituent-operations/action-titles/"));
 
@@ -70,7 +71,39 @@ class _ActionPlanConState extends State<ActionPlanCon> {
     else{
       MyUtils.snack(context, "Sorry, something went wrong.", 2);
     }
+    if(widget.notice){
+      _showMyDialog();
+    }
 
+  }
+
+  Future<void> _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Survey to be conducted in January.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: ButtonStyle(backgroundColor: MaterialStateProperty.all(appColor)),
+              child: const Text('Ok', style: TextStyle(color: Colors.white),),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

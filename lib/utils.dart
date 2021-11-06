@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:omanbapa/constant.dart';
 
 
 class MyUtils{
@@ -7,6 +8,7 @@ class MyUtils{
      final snackBar = SnackBar(
       content: Text(
         text,
+        style: bigFont,
         textAlign: TextAlign.center,
       ),
       duration: Duration(seconds: duration),

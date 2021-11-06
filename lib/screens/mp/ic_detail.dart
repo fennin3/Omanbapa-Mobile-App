@@ -83,6 +83,7 @@ class _IRDetailState extends State<IRDetail>  with SingleTickerProviderStateMixi
             context,
             MaterialPageRoute(
               builder: (context) => ChatMP(
+                mp: {},
                 conId: widget.data['sender']['system_id_for_user'],
                 con: widget.data['sender'],
               ),
@@ -111,16 +112,27 @@ class _IRDetailState extends State<IRDetail>  with SingleTickerProviderStateMixi
             ),
             Text(
               "${widget.data['sender']['full_name']}",
-              style: bigFont
+              style: smallFont
             ),
             Text(
               "${widget.data['sender']['email']}",
-              style: bigFont,
+              style: smallFont,
             ),
             Text(
               "${widget.data['sender']['contact']}",
-              style: bigFont,
+              style: smallFont,
             ),
+            const SizedBox(
+              height: 20,
+            ),
+            const Text(
+              "Subject:",
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Text("${widget.data['subject']}", style: mediumFont,),
             const SizedBox(
               height: 20,
             ),
@@ -129,7 +141,7 @@ class _IRDetailState extends State<IRDetail>  with SingleTickerProviderStateMixi
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             ),
             const SizedBox(
-              height: 5,
+              height: 4,
             ),
             HtmlWidget(
               "${widget.data['message']}",

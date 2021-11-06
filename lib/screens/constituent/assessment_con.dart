@@ -9,7 +9,9 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:omanbapa/utils.dart';
 
 class AssessmentCon extends StatefulWidget {
-  const AssessmentCon({Key? key}) : super(key: key);
+  final bool notice;
+
+  AssessmentCon({required this.notice});
 
   @override
   _AssessmentConState createState() => _AssessmentConState();
@@ -36,6 +38,7 @@ class _AssessmentConState extends State<AssessmentCon> {
         }
       });
     } else {}
+    _showMyDialog();
   }
 
   void getConducts() async {
@@ -87,6 +90,35 @@ class _AssessmentConState extends State<AssessmentCon> {
       });
       MyUtils.snack(context, "${json.decode(response.body)['message']}", 2);
     }
+  }
+
+  Future<void> _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Survey to be conducted in December.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: ButtonStyle(backgroundColor: MaterialStateProperty.all(appColor)),
+              child: const Text('Ok', style: TextStyle(color: Colors.white),),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

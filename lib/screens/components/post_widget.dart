@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:omanbapa/local_data/user_info.dart';
 import 'package:omanbapa/provider/provider_class.dart';
@@ -115,11 +116,17 @@ class _PostWidgetState extends State<PostWidget> {
                   ],
                 ),
                 const Expanded(child: SizedBox()),
-                Text(
-                  timeago.format(DateTime.parse(widget.project['date_posted']),
-                      locale: 'en_short') + " ago",
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      timeago.format(DateTime.parse(widget.project['date_posted']),
+                          locale: 'en_short') + " ago",
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                     Text("Post", style: GoogleFonts.bebasNeue(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w500),)
+                  ],
                 )
               ],
             ),
@@ -160,7 +167,7 @@ class _PostWidgetState extends State<PostWidget> {
               children: [
                 Text(
                   "$likes \tLikes \t\t $comments \tComments",
-                  style: TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 14),
                 )
               ],
             ),

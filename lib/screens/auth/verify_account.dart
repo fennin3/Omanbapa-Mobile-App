@@ -17,6 +17,7 @@ class VerifyAccount extends StatefulWidget {
 class _VerifyAccountState extends State<VerifyAccount> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _code = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   bool _loading = false;
 

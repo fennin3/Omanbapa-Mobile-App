@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:omanbapa/constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:omanbapa/provider/get_functions.dart';
+import 'package:omanbapa/screens/auth/forgot_pass.dart';
 import 'package:omanbapa/screens/auth/signup_const.dart';
 import 'package:omanbapa/screens/auth/signup_mp.dart';
 import 'package:omanbapa/screens/auth/verify_account.dart';
@@ -246,11 +247,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: size.width * 0.8,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      children: const [
-                        Text(
-                          "Forgot Password?",
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600, color: appColor),
+                      children:  [
+                        InkWell(
+                          onTap: ()=>Navigator.push(context, MaterialPageRoute(builder: (context)=>ForgotPassword())),
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600, color: appColor),
+                          ),
                         )
                       ],
                     ),
